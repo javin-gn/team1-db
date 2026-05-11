@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import json
 from datetime import datetime
+import gdown
 
 # Set page configuration
 st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
@@ -11,7 +12,10 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 @st.cache_data
 def load_data():
     # Load the dataset
-    df = pd.read_csv('https://drive.usercontent.google.com/open?id=11db-oMT5iVIXLIyvs0pwhGrdFBDPCAdG&authuser=0', compression='zip')
+    url = f'https://drive.google.com/uc?export=download&id=1aRhERIetzVi6NVAorxcgjlDt1gIeCH2c'
+    output = 'data.csv'
+    gdown.download(url, output, quiet=False)
+    df = pd.read_csv(output)
     
     # 1. CLEANING: Remove rows with missing position levels (NaN)
     df = df.dropna(subset=['positionLevels'])
