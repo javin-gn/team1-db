@@ -12,10 +12,11 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 @st.cache_data
 def load_data():
     # Load the dataset
-    url = f'https://drive.google.com/uc?export=download&id=1aRhERIetzVi6NVAorxcgjlDt1gIeCH2c'
+    #url = f'https://drive.google.com/uc?export=download&id=1aRhERIetzVi6NVAorxcgjlDt1gIeCH2c'
+    url = 'https://drive.google.com/uc?export=download&id=1x7hnhCDnUr5UhwEpcpF5_FnFLMnWV7yY'
     output = 'data.csv'
     gdown.download(url, output, quiet=False)
-    df = pd.read_csv(output)
+    df = pd.read_csv(output, compression='zip')
     
     # 1. CLEANING: Remove rows with missing position levels (NaN)
     df = df.dropna(subset=['positionLevels'])
