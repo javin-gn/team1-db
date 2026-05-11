@@ -11,7 +11,7 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 @st.cache_data
 def load_data():
     # Load the dataset
-    df = pd.read_csv('https://drive.google.com/file/d/11db-oMT5iVIXLIyvs0pwhGrdFBDPCAdG/view?usp=drive_link', compression='zip')
+    df = pd.read_csv('https://drive.google.com/file/d/11db-oMT5iVIXLIyvs0pwhGrdFBDPCAdG/view?ts=6a01df7d', compression='zip')
     
     # 1. CLEANING: Remove rows with missing position levels (NaN)
     df = df.dropna(subset=['positionLevels'])
