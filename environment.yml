@@ -1,0 +1,11 @@
+name: team1-db
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - pip
+  - pip:
+      - streamlit
+      - plotly
