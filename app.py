@@ -13,13 +13,13 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 def load_data():
     # Load the dataset
 
-    url = 'https://drive.google.com/uc?export=download&id=1x7hnhCDnUr5UhwEpcpF5_FnFLMnWV7yY'
+    #url = 'https://drive.google.com/uc?export=download&id=1x7hnhCDnUr5UhwEpcpF5_FnFLMnWV7yY'
 
     # 2. Download into a memory buffer (quiet=True skips output)
-    output = gdown.download(url, output=None, quiet=False)
+    #output = gdown.download(url, output=None, quiet=False)
     # 3. Read directly with pandas (assuming CSV)
-    df = pd.read_csv(output, compression='zip')
-    #df = pd.read_csv('./data/SGJobData.csv')
+    #df = pd.read_csv(output, compression='zip')
+    df = pd.read_csv('./data/SGJobData.csv')
     
     # 1. CLEANING: Remove null rows with missing position levels (NaN)
     #drop null row
