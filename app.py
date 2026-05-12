@@ -3,10 +3,15 @@ import pandas as pd
 import plotly.express as px
 import json
 from datetime import datetime
-import gdown
+import duckdb
+import os
+
 
 # Set page configuration
 st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
+
+
+
 
 # --- DATA LOADING & PREPROCESSING ---
 @st.cache_data
@@ -20,8 +25,10 @@ def load_data():
     # 3. Read directly with pandas (assuming CSV)
     #df = pd.read_csv(output, compression='zip')
     #df = pd.read_csv('./data/SGJobData.csv')
-    chunks = pd.read_csv('./data/SGJobData.csv', chunksize=10000)
-    df = pd.concat(chunks) 
+    
+    DB_FILE = './data/SGJobData.db'
+    con = duckdb.connect(DB_FILE, read_only=True)
+    df = con.execute('SELECT * FROM sg_job_data').df()
     
     # 1. CLEANING: Remove null rows with missing position levels (NaN)
     #drop null row
