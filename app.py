@@ -19,7 +19,9 @@ def load_data():
     #output = gdown.download(url, output=None, quiet=False)
     # 3. Read directly with pandas (assuming CSV)
     #df = pd.read_csv(output, compression='zip')
-    df = pd.read_csv('./data/SGJobData.csv')
+    #df = pd.read_csv('./data/SGJobData.csv')
+    chunks = pd.read_csv('./data/SGJobData.csv', chunksize=10000)
+    df = pd.concat(chunks) 
     
     # 1. CLEANING: Remove null rows with missing position levels (NaN)
     #drop null row
