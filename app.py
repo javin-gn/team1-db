@@ -12,15 +12,22 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 @st.cache_data
 def load_data():
     # Load the dataset
-    #url = f'https://drive.google.com/uc?export=download&id=1aRhERIetzVi6NVAorxcgjlDt1gIeCH2c'
+
     url = 'https://drive.google.com/uc?export=download&id=1x7hnhCDnUr5UhwEpcpF5_FnFLMnWV7yY'
-    output = 'data.csv'
-    gdown.download(url, output, quiet=False)
+
+    # 2. Download into a memory buffer (quiet=True skips output)
+    output = gdown.download(url, output=None, quiet=False)
+    # 3. Read directly with pandas (assuming CSV)
     df = pd.read_csv(output, compression='zip')
+    #df = pd.read_csv('./data/SGJobData.csv')
     
-    # 1. CLEANING: Remove rows with missing position levels (NaN)
+    # 1. CLEANING: Remove null rows with missing position levels (NaN)
+    #drop null row
+    df =  df.dropna(how='all')
+   
+    #drop positionLevels that are 'nan' as string
     df = df.dropna(subset=['positionLevels'])
-    df = df[df['positionLevels'].astype(str).str.lower() != 'nan']
+   
     
     # 2. Parse JSON categories
     def extract_categories(cat_string):
@@ -112,27 +119,52 @@ else:
     st.divider()
 
     # Visualizations
-    col_left, col_right = st.columns(2)
+    c1, c2 = st.columns(2)
 
-    with col_left:
-        # Industry Demand
-        vac_data = df_exploded.groupby('category_list')['numberOfVacancies'].sum().reset_index().sort_values('numberOfVacancies')
-        fig_vac = px.bar(vac_data, y='category_list', x='numberOfVacancies', orientation='h', title="Vacancies by Category")
+    with c1:
+        # Vacancies by Category
+        vac_data = df_exploded.groupby('category_list')['numberOfVacancies'].sum().reset_index().sort_values('numberOfVacancies', ascending=False)
+        fig_vac = px.bar(vac_data, x='category_list', y='numberOfVacancies', 
+                         title="Total Vacancies by Industry", 
+                         labels={'category_list': 'Industry', 'numberOfVacancies': 'Vacancies'},
+                         color='numberOfVacancies', color_continuous_scale='Viridis')
         st.plotly_chart(fig_vac, use_container_width=True)
 
-    with col_right:
-        # Competition
+    with c2:
+        # Competition (Apps per Vacancy)
         comp_data = df_exploded.groupby('category_list').agg({'numberOfVacancies':'sum', 'metadata_totalNumberJobApplication':'sum'})
-        comp_data['Ratio'] = comp_data['metadata_totalNumberJobApplication'] / comp_data['numberOfVacancies'].replace(0, 1)
-        comp_data = comp_data.reset_index().sort_values('Ratio')
-        fig_comp = px.bar(comp_data, y='category_list', x='Ratio', orientation='h', title="Competition (Apps per Vacancy)", color_discrete_sequence=['#ff4b4b'])
+        # Avoid division by zero
+        comp_data['Apps/Vacancy'] = comp_data['metadata_totalNumberJobApplication'] / comp_data['numberOfVacancies'].replace(0, 1)
+        comp_data = comp_data.reset_index().sort_values('Apps/Vacancy', ascending=False)
+        
+        fig_comp = px.bar(comp_data, x='category_list', y='Apps/Vacancy', 
+                          title="Competition Ratio (Apps per Vacancy)", 
+                          labels={'category_list': 'Industry', 'Apps/Vacancy': 'Apps per Vacancy'},
+                          color='Apps/Vacancy', color_continuous_scale='Reds')
         st.plotly_chart(fig_comp, use_container_width=True)
 
     # Salary Chart
-    st.subheader("Salary vs. Application Volume")
-    fig_scatter = px.scatter(df_filtered, x='average_salary', y='metadata_totalNumberJobApplication', 
-                             color='positionLevels', size='numberOfVacancies', hover_name='title')
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    c3, c4 = st.columns(2)
+
+    with c3:
+        # Filter outliers for scatter plot visualization
+        sal_limit = df_filtered['average_salary'].quantile(0.98)
+        df_scatter = df_filtered[df_filtered['average_salary'] <= sal_limit]
+        
+        fig_scatter = px.scatter(df_scatter, x='average_salary', y='metadata_totalNumberJobApplication', 
+                                 color='positionLevels', size='numberOfVacancies', 
+                                 hover_name='title', opacity=0.6,
+                                 title="Correlation: Salary vs. Application Volume",
+                                 labels={'average_salary': 'Avg Salary ($)', 'metadata_totalNumberJobApplication': 'Total Apps'})
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    with c4:
+        # Interest by Employment Type
+        emp_type = df_filtered.groupby('employmentTypes')['metadata_totalNumberJobApplication'].mean().reset_index()
+        fig_pie = px.pie(emp_type, values='metadata_totalNumberJobApplication', names='employmentTypes', 
+                         title="Average Applicant Interest by Employment Type",
+                         hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+        st.plotly_chart(fig_pie, use_container_width=True)
 
 
 st.caption(f"🟢 Retrieved at: {datetime.now().strftime('%d/%m/%Y %H:%M') }" + " | Data Source: data.gov.sg")
