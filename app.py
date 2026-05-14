@@ -12,10 +12,11 @@ st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 
 
 @st.cache_data(show_spinner="Loading job data…")
-def load_data() -> pd.DataFrame:
+def load_data():
     df = pd.read_parquet("./data/jobs.parquet")
+  
     return df
-   
+
 df = load_data()
 
 # --- PREPARE FILTER OPTIONS ---
