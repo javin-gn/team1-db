@@ -11,53 +11,11 @@ import os
 st.set_page_config(page_title="Job Market Insights Dashboard", layout="wide")
 
 
-
-
-# --- DATA LOADING & PREPROCESSING ---
-@st.cache_data
-def load_data():
-    # Load the dataset
-
-    #url = 'https://drive.google.com/uc?export=download&id=1x7hnhCDnUr5UhwEpcpF5_FnFLMnWV7yY'
-
-    # 2. Download into a memory buffer (quiet=True skips output)
-    #output = gdown.download(url, output=None, quiet=False)
-    # 3. Read directly with pandas (assuming CSV)
-    #df = pd.read_csv(output, compression='zip')
-    #df = pd.read_csv('./data/SGJobData.csv')
-    
-    DB_FILE = './data/SGJobData.db'
-    con = duckdb.connect(DB_FILE, read_only=True)
-    df = con.execute('SELECT * FROM sg_job_data').df()
-    
-    # 1. CLEANING: Remove null rows with missing position levels (NaN)
-    #drop null row
-    df =  df.dropna(how='all')
-   
-    #drop positionLevels that are 'nan' as string
-    df = df.dropna(subset=['positionLevels'])
-   
-    
-    # 2. Parse JSON categories
-    def extract_categories(cat_string):
-        if pd.isna(cat_string): return []
-        try:
-            # Fix potential escaped quotes
-            clean_str = str(cat_string).replace('""', '"')
-            cat_list = json.loads(clean_str)
-            return [item['category'] for item in cat_list]
-        except:
-            return []
-            
-    df['category_list'] = df['categories'].apply(extract_categories)
-    
-    # 3. Ensure numerical columns are clean
-    df['average_salary'] = pd.to_numeric(df['average_salary'], errors='coerce').fillna(0)
-    df['numberOfVacancies'] = pd.to_numeric(df['numberOfVacancies'], errors='coerce').fillna(0)
-    df['metadata_totalNumberJobApplication'] = pd.to_numeric(df['metadata_totalNumberJobApplication'], errors='coerce').fillna(0)
-    
+@st.cache_data(show_spinner="Loading job data…")
+def load_data() -> pd.DataFrame:
+    df = pd.read_parquet("./data/jobs.parquet")
     return df
-
+   
 df = load_data()
 
 # --- PREPARE FILTER OPTIONS ---
